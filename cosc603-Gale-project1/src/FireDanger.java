@@ -51,6 +51,14 @@ public class FireDanger {
 		if (!miSnow){
 			CalcFineFuelMoisture();
 			CalcDrayingFactor();
+			
+			/*
+			 * Why?
+			 */
+			if (mFfm < 1){
+				mFfm = 1; 
+			}
+				
 			AdjustFineFuelForHerbStage();
 			
 			if( tempPrecip > 0){
@@ -58,25 +66,31 @@ public class FireDanger {
 			}
 			IncBUIbyDryingFactor();
 			CalcFuelAdjustedFuelMoist();
-			if( mAdfm > 33 ){
-				 if( mFfm > 33){
-					 //set Grass and timber to 1
-					 ChangeSpread( 1 );
-				 }
-				
-			}
+			if( mAdfm > 30 && mFfm > 30){
+				//set Grass and timber to 1
+				ChangeSpread( 1 );
+				}
 			else{
+				
+				boolean doTimber = true;
+				
+				if ( mFfm < 30){
+					mTimber = 1;
+					doTimber = false;	
+				}
 				if(mWind > 14){
-					caculateGrassTimberSpread();
+					caculateGrassTimberSpread(true, doTimber, .009184, 14.4);
 				}
 				else{
-					caculateGrassTimberSpread();
+					caculateGrassTimberSpread(true, doTimber, .01312, 6.0);
 				}
-				if(mBUO != 0 || mTimber !=0){
+				
+				if(mBUI > 0 && mTimber > 0){
 					CalcFireLoadIndex();
 				}
 			}
 		}
+			
 		else{
 			ChangeSpread( 0 );
 			if (tempPrecip > 0){
@@ -90,7 +104,7 @@ public class FireDanger {
 		double dif = mDry - mWet;
 		
 		int i = 0;
-		for (i = 0; i < mC.length; i++){
+		for (i = 0; i < mC.length - 1; i++){
 			if (dif < mC[i]){
 				break;
 			}
@@ -101,21 +115,58 @@ public class FireDanger {
 	}
 	private static void CalcDrayingFactor(){
 		
+		int i = 0;
+		for(i = 0; i < mD.length; i++){
+			if ( mFfm - mD[i] > 0 ){
+				break;
+			}
+		}
+		mDf = i;
+		
 	}
 	private static void AdjustFineFuelForHerbStage(){
 		
+		mFfm = mFfm + ( miHerb - 1 ) * 5;
+		
 	}
 	private static void IncBUIbyDryingFactor(){
+		mBUI = mBUI + mDf;
 		
 	}
 	private static void CalcFuelAdjustedFuelMoist(){
 		
-	}
-	private static void caculateGrassTimberSpread(){
+		mAdfm = .9 * mFfm + .5 + 9.5 * Math.exp(-mBUI/50);
 		
+	}
+	private static void caculateGrassTimberSpread(boolean doGrass, boolean doTimber,
+												  double a, double b){
+		if (doGrass){
+			mGrass = a * (mWind + b) * Math.pow((33 - mFfm ), 1.65) - 3;
+			if ( mGrass < 1){
+				mGrass = 1;
+			}
+			if ( mGrass > 99){
+				mGrass = 99;
+			}
+		}
+		if(doTimber){
+			mTimber = a * (mWind + b) * Math.pow((33 - mAdfm ), 1.65) - 3;
+			if ( mTimber < 1){
+				mTimber = 1;
+			}
+			if ( mTimber > 99){
+				mTimber = 99;
+			}
+		}
 	}
 	private static void CalcFireLoadIndex(){
-		
+		mFload = 1.75 * Math.exp(mTimber) + .32 * Math.exp(mBUI) -1.640;
+		if (mFload < 0){
+			mFload = 0;
+		}
+		else{
+			mFload = Math.pow(10, mFload);
+		}
 	}
 	private static void ChangeSpread(double index){
 		mGrass = index;
