@@ -8,15 +8,15 @@ public class FireDanger {
 	/**
 	 * Instantiates a new fire danger.
 	 *
-	 * @param dry the dry
-	 * @param wet the wet
-	 * @param iSnow the isnow
-	 * @param precip the precip
-	 * @param wind the wind
-	 * @param buo the buo
-	 * @param iHerb the iherb
+	 * @param dry Bulb temperature
+	 * @param wet Bulb temperature
+	 * @param iSnow is a some positive non zero number if there is snow on the ground
+	 * @param precip is a number if there has been precipitation
+	 * @param wind is the wind speed
+	 * @param buo is the last value of Build up index
+	 * @param iHerb the the current herb state of the district 1 = Cured, 2 = Transitions, 3 = Green
 	 */
-	public FireDanger(double dry,    double wet,  boolean iSnow, 
+	public FireDanger(double dry,    double wet,  double iSnow, 
 					  double precip, double wind, double buo,   int iHerb){
 		
 		mDry = dry;
@@ -66,13 +66,11 @@ public class FireDanger {
 		
 		double tempPrecip = mPrecip - .1;
 		
-		if (!miSnow){
+		if (miSnow <= 0){
+			
 			CalcFineFuelMoisture();
 			CalcDrayingFactor();
 			
-			/*
-			 * Why?
-			 */
 			if (mFfm < 1){
 				mFfm = 1; 
 			}
@@ -82,35 +80,43 @@ public class FireDanger {
 			if( tempPrecip > 0){
 				AdjustBUI();
 			}
+			
 			IncBUIbyDryingFactor();
 			CalcFuelAdjustedFuelMoist();
+			
+			double factorA = 0;
+			double factorB = 0;
+			
 			if( mAdfm > 30 && mFfm > 30){
 				//set Grass and timber to 1
 				ChangeSpread( 1 );
 				}
 			else{
-				
-				boolean doTimber = true;
-				
-				if ( mFfm < 30){
-					mTimber = 1;
-					doTimber = false;	
-				}
 				if(mWind > 14){
-					caculateGrassTimberSpread(true, doTimber, .009184, 14.4);
+					factorA = 0.009184;
+					factorB = 14.4;
+				}				
+				else{
+					factorA = 0.01312;
+					factorB = 6.0;
+				}
+				if ( mFfm < 30){
+					ChangeSpread(1);
 				}
 				else{
-					caculateGrassTimberSpread(true, doTimber, .01312, 6.0);
+					calculateTimberSpread(factorA, factorB);
 				}
+				calculateGrassSpread(factorA, factorB);
 				
 				if(mBUI > 0 && mTimber > 0){
 					CalcFireLoadIndex();
 				}
 			}
 		}
-			
 		else{
+			
 			ChangeSpread( 0 );
+			
 			if (tempPrecip > 0){
 				AdjustBUI();
 			}
@@ -205,33 +211,34 @@ public class FireDanger {
 	}
 	
 	/**
-	 * Caculate grass timber spread.
+	 * Calculate grass timber spread.
 	 *
 	 * @param doGrass the do grass
 	 * @param doTimber the do timber
 	 * @param a the a
 	 * @param b the b
 	 */
-	private static void caculateGrassTimberSpread(boolean doGrass, boolean doTimber,
-												  double a, double b){
-		if (doGrass){
-			mGrass = a * (mWind + b) * Math.pow((33 - mFfm ), 1.65) - 3;
-			if ( mGrass < 1){
-				mGrass = 1;
-			}
-			if ( mGrass > 99){
-				mGrass = 99;
-			}
+	private static void calculateGrassSpread( double a, double b){
+		double grassIndex = 0; 
+		grassIndex = a * (mWind + b) * Math.pow((33 - mFfm ), 1.65) - 3;
+		if ( grassIndex < 1){
+			grassIndex = 1;
 		}
-		if(doTimber){
-			mTimber = a * (mWind + b) * Math.pow((33 - mAdfm ), 1.65) - 3;
-			if ( mTimber < 1){
-				mTimber = 1;
-			}
-			if ( mTimber > 99){
-				mTimber = 99;
-			}
+		if ( grassIndex > 99){
+			grassIndex = 99;
 		}
+		mGrass = grassIndex;
+	}
+	private static void calculateTimberSpread( double a, double b){
+		double timberIndex = 0;
+		timberIndex = a * (mWind + b) * Math.pow((33 - mAdfm ), 1.65) - 3;
+		if ( timberIndex < 1){
+			timberIndex = 1;
+		}
+		if ( timberIndex > 99){
+			timberIndex = 99;
+		}
+		mTimber = timberIndex;
 	}
 	
 	/**
@@ -258,7 +265,7 @@ public class FireDanger {
 	}
 	
 	/**
-	 * Adjust bui.
+	 * Adjust BUI.
 	 */
 	private static void AdjustBUI(){
 		mBUI = -50 * ( Math.log(1 - ( Math.exp( -mBUO / 50))) * Math.exp(1.175 * (mPrecip - .1)));
@@ -268,14 +275,14 @@ public class FireDanger {
 		
 	}
 	
-	/** The m dry. */
+	/** The Dry bulb temperature. */
 	private static double mDry;
 	
-	/** The m wet. */
+	/** The wet bulb temperature. */
 	private static double mWet;
 	
-	/** The mi snow. */
-	private static boolean miSnow;
+	/** positie none zero number if there is snow on the ground. */
+	private static double miSnow;
 	
 	/** The m precip. */
 	private static double mPrecip;
