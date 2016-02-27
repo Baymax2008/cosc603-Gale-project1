@@ -1,10 +1,20 @@
+// TODO: Auto-generated Javadoc
 
+/**
+ * The Class Main.
+ */
 public class Main {
 
+	/**
+	 * The main method.
+	 *
+	 * @param args the arguments
+	 */
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		
-		FireDanger fireIndex= new FireDanger( 1,2,false,4,5,6,7);
+		// Simple, to change any of the input value change the number 1 - 7 to the desired value
+		FireDanger fireIndex= new FireDanger( 1,2,3,4,5,6,7);
 		
 		fireIndex.calcFireDanger();
 		
