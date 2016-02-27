@@ -62,7 +62,7 @@ public class FireDanger {
 	/**
 	 * Calculate fire danger.
 	 */
-	public void calcFireDanger(){
+	public void CalcFireDanger(){
 		
 		double tempPrecip = mPrecip - .1;
 		
@@ -107,9 +107,9 @@ public class FireDanger {
 					ChangeSpread(1);
 				}
 				else{
-					calculateTimberSpread(factorA, factorB);
+					CalculateTimberSpread(factorA, factorB);
 				}
-				calculateGrassSpread(factorA, factorB);
+				CalculateGrassSpread(factorA, factorB);
 				
 				if(mBUI > 0 && mTimber > 0){
 					CalcFireLoadIndex();
@@ -150,7 +150,7 @@ public class FireDanger {
 	 *
 	 * @return the double
 	 */
-	public double GetFFM(){
+	public double GetFFM( ){
 		return mFfm;
 	}
 	
@@ -244,6 +244,7 @@ public class FireDanger {
 	 * Inc BUI by drying factor.
 	 */
 	private static void IncBUIbyDryingFactor(){
+		
 		mBUI = mBUI + mDf;
 		
 	}
@@ -263,7 +264,7 @@ public class FireDanger {
 	 * @param a the a factor based on wind speed
 	 * @param b the b factor based on wind speed
 	 */
-	private static void calculateGrassSpread( double a, double b){
+	private static void CalculateGrassSpread( double a, double b){
 		double grassIndex = 0; 
 		grassIndex = a * (mWind + b) * Math.pow((33 - mFfm ), 1.65) - 3;
 		if ( grassIndex < 1){
@@ -281,7 +282,7 @@ public class FireDanger {
 	 * @param a the a factor based on wind speed
 	 * @param b the b factor based on wind speed
 	 */
-	private static void calculateTimberSpread( double a, double b){
+	private static void CalculateTimberSpread( double a, double b){
 		double timberIndex = 0;
 		timberIndex = a * (mWind + b) * Math.pow((33 - mAdfm ), 1.65) - 3;
 		if ( timberIndex < 1){

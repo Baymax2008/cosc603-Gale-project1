@@ -16,7 +16,7 @@ public class Main {
 		// Simple, to change any of the input value change the number 1 - 7 to the desired value
 		FireDanger fireIndex= new FireDanger( 1,2,3,4,5,6,7);
 		
-		fireIndex.calcFireDanger();
+		fireIndex.CalcFireDanger();
 		
 		System.out.println("The Dry Factor is: " + fireIndex.GetDF());
 		System.out.println("The Fine Fuel Moisture is: " + fireIndex.GetFFM());
